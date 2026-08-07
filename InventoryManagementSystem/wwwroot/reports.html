@@ -1,0 +1,268 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Reports - Inventory</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f5f7fb;
+        }
+
+        nav {
+            background: #1f4e79;
+            padding: 15px 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+            nav a {
+                color: white;
+                text-decoration: none;
+                font-weight: bold;
+                padding: 8px 16px;
+                border-radius: 6px;
+            }
+
+                nav a:hover {
+                    background: #2e75b6;
+                }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 950px;
+            margin: 30px auto;
+        }
+
+        h1, h3 {
+            color: #1f4e79;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th {
+            background: #1f4e79;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        button {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #1f4e79;
+            color: white;
+            margin-right: 10px;
+        }
+
+        .badge-low {
+            background: #ff4444;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+
+
+    <nav>
+
+        <a href="index.html">🏠 Home</a>
+
+        <a href="products.html">📦 Products</a>
+
+        <a href="suppliers.html">🏭 Suppliers</a>
+
+        <a href="purchases.html">🛒 Purchases</a>
+
+        <a href="sales.html">💰 Sales</a>
+
+        <a href="reports.html">📊 Reports</a>
+
+    </nav>
+
+
+
+    <div class="card">
+
+        <h1>📊 Reports</h1>
+
+
+
+        <button onclick="loadLowStock()">🔴 Low Stock Report</button>
+
+        <button onclick="loadStockSummary()">📦 Stock Summary</button>
+
+
+
+        <div id="reportArea"></div>
+
+    </div>
+
+
+
+    <script>
+
+    async function loadLowStock() {
+
+        const response = await fetch('/api/reports/low-stock');
+
+        const items = await response.json();
+
+
+
+        if (items.length === 0) {
+
+            document.getElementById('reportArea').innerHTML = '<p style="color:green;margin-top:15px">✅ All products are well stocked!</p>';
+
+            return;
+
+        }
+
+
+
+        const rows = items.map(i => `
+
+            <tr>
+
+                <td>${i.productId}</td>
+
+                <td>${i.productName}</td>
+
+                <td>${i.category || '-'}</td>
+
+                <td>${i.quantityInStock}</td>
+
+                <td>${i.reorderLevel}</td>
+
+                <td><span class="badge-low">Low Stock</span></td>
+
+            </tr>`).join('');
+
+
+
+        document.getElementById('reportArea').innerHTML = `
+
+            <h3>🔴 Low Stock Products</h3>
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>ID</th>
+
+                        <th>Product Name</th>
+
+                        <th>Category</th>
+
+                        <th>In Stock</th>
+
+                        <th>Reorder Level</th>
+
+                        <th>Status</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>${rows}</tbody>
+
+            </table>`;
+
+    }
+
+
+
+    async function loadStockSummary() {
+
+        const response = await fetch('/api/products');
+
+        const products = await response.json();
+
+
+
+        const rows = products.map(p => `
+
+            <tr>
+
+                <td>${p.productId}</td>
+
+                <td>${p.productName}</td>
+
+                <td>${p.quantityInStock}</td>
+
+                <td>${p.reorderLevel}</td>
+
+                <td>${p.quantityInStock < p.reorderLevel
+
+                    ? '<span class="badge-low">Low Stock</span>'
+
+                    : '<span style="color:green">✅ OK</span>'}</td>
+
+            </tr>`).join('');
+
+
+
+        document.getElementById('reportArea').innerHTML = `
+
+            <h3>📦 Stock Summary</h3>
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>ID</th>
+
+                        <th>Product Name</th>
+
+                        <th>In Stock</th>
+
+                        <th>Reorder Level</th>
+
+                        <th>Status</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>${rows}</tbody>
+
+            </table>`;
+
+    }
+
+    </script>
+
+</body>
+
+</html>

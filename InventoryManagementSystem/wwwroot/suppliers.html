@@ -1,0 +1,289 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Suppliers - Inventory</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f5f7fb;
+        }
+
+        nav {
+            background: #1f4e79;
+            padding: 15px 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+            nav a {
+                color: white;
+                text-decoration: none;
+                font-weight: bold;
+                padding: 8px 16px;
+                border-radius: 6px;
+            }
+
+                nav a:hover {
+                    background: #2e75b6;
+                }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 950px;
+            margin: 30px auto;
+        }
+
+        h1, h3 {
+            color: #1f4e79;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th {
+            background: #1f4e79;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        button {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #1f4e79;
+            color: white;
+        }
+
+        input {
+            padding: 8px;
+            width: 100%;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        #message {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+
+</head>
+
+<body>
+
+
+
+    <nav>
+
+        <a href="index.html">🏠 Home</a>
+
+        <a href="products.html">📦 Products</a>
+
+        <a href="suppliers.html">🏭 Suppliers</a>
+
+        <a href="purchases.html">🛒 Purchases</a>
+
+        <a href="sales.html">💰 Sales</a>
+
+        <a href="reports.html">📊 Reports</a>
+
+    </nav>
+
+
+
+    <div class="card">
+
+        <h1>🏭 Suppliers</h1>
+
+
+
+        <h3>Add New Supplier</h3>
+
+        <div class="form-group"><label>Supplier Name *</label><input id="supplierName" placeholder="Enter supplier name"></div>
+
+        <div class="form-group"><label>Contact Person</label><input id="contactPerson" placeholder="Enter contact person"></div>
+
+        <div class="form-group"><label>Phone</label><input id="phone" placeholder="Enter phone number"></div>
+
+        <div class="form-group"><label>Email</label><input id="email" type="email" placeholder="Enter email"></div>
+
+        <div class="form-group"><label>Address</label><input id="address" placeholder="Enter address"></div>
+
+        <button onclick="addSupplier()">Save Supplier</button>
+
+        <div id="message"></div>
+
+
+
+        <h3>All Suppliers</h3>
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Name</th>
+
+                    <th>Contact Person</th>
+
+                    <th>Phone</th>
+
+                    <th>Email</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="supplierList"></tbody>
+
+        </table>
+
+    </div>
+
+
+
+    <script>
+
+    async function loadSuppliers() {
+
+        const response = await fetch('/api/suppliers');
+
+        const suppliers = await response.json();
+
+        const rows = suppliers.map(s => `
+
+            <tr>
+
+                <td>${s.supplierId}</td>
+
+                <td>${s.supplierName}</td>
+
+                <td>${s.contactPerson || '-'}</td>
+
+                <td>${s.phone || '-'}</td>
+
+                <td>${s.email || '-'}</td>
+
+            </tr>`).join('');
+
+        document.getElementById('supplierList').innerHTML = rows || '<tr><td colspan="5">No suppliers found.</td></tr>';
+
+    }
+
+
+
+    async function addSupplier() {
+
+        const msg = document.getElementById('message');
+
+
+
+        if (!document.getElementById('supplierName').value.trim()) {
+
+            msg.className = 'error';
+
+            msg.textContent = 'Supplier Name is required.';
+
+            return;
+
+        }
+
+
+
+        const supplier = {
+
+            SupplierName:   document.getElementById('supplierName').value.trim(),
+
+            ContactPerson:  document.getElementById('contactPerson').value.trim(),
+
+            Phone:          document.getElementById('phone').value.trim(),
+
+            Email:          document.getElementById('email').value.trim(),
+
+            Address:        document.getElementById('address').value.trim()
+
+        };
+
+
+
+        const response = await fetch('/api/suppliers', {
+
+            method: 'POST',
+
+            headers: { 'Content-Type': 'application/json' },
+
+            body: JSON.stringify(supplier)
+
+        });
+
+
+
+        if (response.ok) {
+
+            msg.className = 'success';
+
+            msg.textContent = 'Supplier saved successfully!';
+
+            loadSuppliers();
+
+            document.querySelectorAll('input').forEach(i => i.value = '');
+
+        } else {
+
+            msg.className = 'error';
+
+            msg.textContent = 'Failed to save supplier.';
+
+        }
+
+    }
+
+
+
+    loadSuppliers();
+
+    </script>
+
+</body>
+
+</html>

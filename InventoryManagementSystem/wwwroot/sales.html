@@ -1,0 +1,290 @@
+﻿
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Sales - Inventory</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f5f7fb;
+        }
+
+        nav {
+            background: #1f4e79;
+            padding: 15px 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+            nav a {
+                color: white;
+                text-decoration: none;
+                font-weight: bold;
+                padding: 8px 16px;
+                border-radius: 6px;
+            }
+
+                nav a:hover {
+                    background: #2e75b6;
+                }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 950px;
+            margin: 30px auto;
+        }
+
+        h1, h3 {
+            color: #1f4e79;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th {
+            background: #1f4e79;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        button {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #1f4e79;
+            color: white;
+        }
+
+        input {
+            padding: 8px;
+            width: 100%;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        #message {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+
+</head>
+
+<body>
+
+
+
+    <nav>
+
+        <a href="index.html">🏠 Home</a>
+
+        <a href="products.html">📦 Products</a>
+
+        <a href="suppliers.html">🏭 Suppliers</a>
+
+        <a href="purchases.html">🛒 Purchases</a>
+
+        <a href="sales.html">💰 Sales</a>
+
+        <a href="reports.html">📊 Reports</a>
+
+    </nav>
+
+
+
+    <div class="card">
+
+        <h1>💰 Sales</h1>
+
+
+
+        <h3>Record New Sale</h3>
+
+        <div class="form-group"><label>Product ID *</label><input id="productId" type="number" placeholder="Enter product ID"></div>
+
+        <div class="form-group"><label>Quantity *</label><input id="quantity" type="number" placeholder="Enter quantity"></div>
+
+        <div class="form-group"><label>Unit Price *</label><input id="unitPrice" type="number" placeholder="0.00"></div>
+
+        <button onclick="addSale()">Record Sale</button>
+
+        <div id="message"></div>
+
+
+
+        <h3>All Sales</h3>
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Product ID</th>
+
+                    <th>Quantity</th>
+
+                    <th>Unit Price</th>
+
+                    <th>Total Amount</th>
+
+                    <th>Date</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="salesList"></tbody>
+
+        </table>
+
+    </div>
+
+
+
+    <script>
+
+    async function loadSales() {
+
+        const response = await fetch('/api/sales');
+
+        const sales = await response.json();
+
+        const rows = sales.map(s => `
+
+            <tr>
+
+                <td>${s.salesId}</td>
+
+                <td>${s.productId}</td>
+
+                <td>${s.quantity}</td>
+
+                <td>$${s.unitPrice.toFixed(2)}</td>
+
+                <td>$${s.totalAmount.toFixed(2)}</td>
+
+                <td>${new Date(s.salesDate).toLocaleDateString()}</td>
+
+            </tr>`).join('');
+
+        document.getElementById('salesList').innerHTML = rows || '<tr><td colspan="6">No sales found.</td></tr>';
+
+    }
+
+
+
+    async function addSale() {
+
+        const msg = document.getElementById('message');
+
+
+
+        if (!document.getElementById('productId').value ||
+
+            !document.getElementById('quantity').value ||
+
+            !document.getElementById('unitPrice').value) {
+
+            msg.className = 'error';
+
+            msg.textContent = 'All fields are required.';
+
+            return;
+
+        }
+
+
+
+        const sale = {
+
+            ProductId: parseInt(document.getElementById('productId').value),
+
+            Quantity:  parseInt(document.getElementById('quantity').value),
+
+            UnitPrice: parseFloat(document.getElementById('unitPrice').value)
+
+        };
+
+
+
+        const response = await fetch('/api/sales', {
+
+            method: 'POST',
+
+            headers: { 'Content-Type': 'application/json' },
+
+            body: JSON.stringify(sale)
+
+        });
+
+
+
+        if (response.ok) {
+
+            msg.className = 'success';
+
+            msg.textContent = 'Sale recorded and stock decreased!';
+
+            loadSales();
+
+            document.querySelectorAll('input').forEach(i => i.value = '');
+
+        } else {
+
+            msg.className = 'error';
+
+            msg.textContent = 'Failed to record sale.';
+
+        }
+
+    }
+
+
+
+    loadSales();
+
+    </script>
+
+</body>
+
+</html>

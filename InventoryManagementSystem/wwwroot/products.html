@@ -1,0 +1,311 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Products - Inventory</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f5f7fb;
+        }
+
+        nav {
+            background: #1f4e79;
+            padding: 15px 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+            nav a {
+                color: white;
+                text-decoration: none;
+                font-weight: bold;
+                padding: 8px 16px;
+                border-radius: 6px;
+            }
+
+                nav a:hover {
+                    background: #2e75b6;
+                }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 950px;
+            margin: 30px auto;
+        }
+
+        h1, h3 {
+            color: #1f4e79;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th {
+            background: #1f4e79;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        button {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #1f4e79;
+            color: white;
+        }
+
+            button:hover {
+                background: #2e75b6;
+            }
+
+        input {
+            padding: 8px;
+            width: 100%;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        #message {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+
+</head>
+
+<body>
+
+
+
+    <nav>
+
+        <a href="index.html">🏠 Home</a>
+
+        <a href="products.html">📦 Products</a>
+
+        <a href="suppliers.html">🏭 Suppliers</a>
+
+        <a href="purchases.html">🛒 Purchases</a>
+
+        <a href="sales.html">💰 Sales</a>
+
+        <a href="reports.html">📊 Reports</a>
+
+    </nav>
+
+
+
+    <div class="card">
+
+        <h1>📦 Products</h1>
+
+
+
+        <h3>Add New Product</h3>
+
+        <div class="form-group"><label>Product Name *</label><input id="productName" placeholder="Enter product name"></div>
+
+        <div class="form-group"><label>Category</label><input id="category" placeholder="Enter category"></div>
+
+        <div class="form-group"><label>Price</label><input id="price" type="number" placeholder="0.00"></div>
+
+        <div class="form-group"><label>Quantity In Stock</label><input id="quantity" type="number" placeholder="0"></div>
+
+        <div class="form-group"><label>Reorder Level</label><input id="reorderLevel" type="number" placeholder="0"></div>
+
+        <div class="form-group"><label>Supplier ID *</label><input id="supplierId" type="number" placeholder="Enter supplier ID"></div>
+
+        <button onclick="addProduct()">Save Product</button>
+
+        <div id="message"></div>
+
+
+
+        <h3>All Products</h3>
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Name</th>
+
+                    <th>Category</th>
+
+                    <th>Price</th>
+
+                    <th>Quantity</th>
+
+                    <th>Reorder Level</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="productList"></tbody>
+
+        </table>
+
+    </div>
+
+
+
+    <script>
+
+    async function loadProducts() {
+
+        const response = await fetch('/api/products');
+
+        const products = await response.json();
+
+        const rows = products.map(p => `
+
+            <tr>
+
+                <td>${p.productId}</td>
+
+                <td>${p.productName}</td>
+
+                <td>${p.category || '-'}</td>
+
+                <td>$${p.price.toFixed(2)}</td>
+
+                <td>${p.quantityInStock}</td>
+
+                <td>${p.reorderLevel}</td>
+
+            </tr>`).join('');
+
+        document.getElementById('productList').innerHTML = rows || '<tr><td colspan="6">No products found.</td></tr>';
+
+    }
+
+
+
+    async function addProduct() {
+
+        const msg = document.getElementById('message');
+
+
+
+        if (!document.getElementById('productName').value.trim()) {
+
+            msg.className = 'error';
+
+            msg.textContent = 'Product Name is required.';
+
+            return;
+
+        }
+
+        if (!document.getElementById('supplierId').value) {
+
+            msg.className = 'error';
+
+            msg.textContent = 'Supplier ID is required.';
+
+            return;
+
+        }
+
+
+
+        const product = {
+
+            ProductName:     document.getElementById('productName').value.trim(),
+
+            Category:        document.getElementById('category').value.trim(),
+
+            Price:           parseFloat(document.getElementById('price').value || 0),
+
+            QuantityInStock: parseInt(document.getElementById('quantity').value || 0),
+
+            ReorderLevel:    parseInt(document.getElementById('reorderLevel').value || 0),
+
+            SupplierId:      parseInt(document.getElementById('supplierId').value || 0)
+
+        };
+
+
+
+        const response = await fetch('/api/products', {
+
+            method: 'POST',
+
+            headers: { 'Content-Type': 'application/json' },
+
+            body: JSON.stringify(product)
+
+        });
+
+
+
+        if (response.ok) {
+
+            msg.className = 'success';
+
+            msg.textContent = 'Product saved successfully!';
+
+            loadProducts();
+
+            document.querySelectorAll('input').forEach(i => i.value = '');
+
+        } else {
+
+            msg.className = 'error';
+
+            msg.textContent = 'Failed to save product.';
+
+        }
+
+    }
+
+
+
+    loadProducts();
+
+    </script>
+
+</body>
+
+</html>
