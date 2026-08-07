@@ -2,6 +2,7 @@ using InventoryManagementSystem.Data;
 using InventoryManagementSystem.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace InventoryManagementSystem.Controllers;
 
@@ -60,5 +61,40 @@ public class SalesController : ControllerBase
         await _context.SaveChangesAsync();
 
         return CreatedAtAction(nameof(GetSale), new { id = sale.SalesId }, sale);
+    }
+
+    // POST: api/sales/create — uses stored procedure with transaction
+    [HttpPost("create")]
+
+    public IActionResult CreateSaleViaSP([FromBody] CreateSaleRequest request)
+
+    {
+
+        string connectionString = _context.Database.GetConnectionString();
+
+
+
+        using SqlConnection conn = new(connectionString);
+
+        conn.Open();
+
+
+
+        using SqlCommand cmd = new("usp_CreateSale", conn);
+
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+        cmd.Parameters.AddWithValue("@ProductId", request.ProductId);
+
+        cmd.Parameters.AddWithValue("@Quantity", request.Quantity);
+
+        cmd.Parameters.AddWithValue("@UnitPrice", request.UnitPrice);
+
+
+
+        int newId = Convert.ToInt32(cmd.ExecuteScalar());
+
+        return Ok(new { SaleId = newId, Message = "Sale recorded and stock decreased." });
+
     }
 }

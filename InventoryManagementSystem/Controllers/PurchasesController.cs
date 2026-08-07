@@ -2,6 +2,7 @@ using InventoryManagementSystem.Data;
 using InventoryManagementSystem.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace InventoryManagementSystem.Controllers;
 
@@ -58,5 +59,43 @@ public class PurchasesController : ControllerBase
         await _context.SaveChangesAsync();*/
 
         return CreatedAtAction(nameof(GetPurchase), new { id = purchase.PurchaseId }, purchase);
+    }
+
+    // POST: api/purchases/create — uses stored procedure with transaction
+
+    [HttpPost("create")]
+
+    public IActionResult CreatePurchaseViaSP([FromBody] CreatePurchaseRequest request)
+
+    {
+
+        string connectionString = _context.Database.GetConnectionString();
+
+
+
+        using SqlConnection conn = new(connectionString);
+
+        conn.Open();
+
+
+
+        using SqlCommand cmd = new("usp_CreatePurchase", conn);
+
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+        cmd.Parameters.AddWithValue("@ProductId", request.ProductId);
+
+        cmd.Parameters.AddWithValue("@SupplierId", request.SupplierId);
+
+        cmd.Parameters.AddWithValue("@Quantity", request.Quantity);
+
+        cmd.Parameters.AddWithValue("@UnitPrice", request.UnitPrice);
+
+
+
+        int newId = Convert.ToInt32(cmd.ExecuteScalar());
+
+        return Ok(new { PurchaseId = newId, Message = "Purchase created and stock updated." });
+
     }
 }
